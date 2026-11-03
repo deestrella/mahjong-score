@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>麻雀点数早見</title>
+<style>:root{color-scheme:light}body{margin:0;font-size:14px}</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Shippori+Mincho+B1:wght@700;800&display=swap">
+<style>
+/* Layout: one-column phone-first. Settings on top, big answer, then the fu table for the chosen han. */
+:root {
+  --bg: #eaf0ec;
+  --surface: #ffffff;
+  --ink: #12261d;
+  --muted: #5b6e64;
+  --line: #cfdad3;
+  --felt: #1d6b4f;
+  --felt-ink: #ffffff;
+  --red: #c4302b;
+  --sel: #dcefe4;
+  --m: #c4302b; --p: #1f5fa8; --s: #1d6b4f;
+  --font-body: "Noto Sans JP", system-ui, sans-serif;
+  --font-num: "Shippori Mincho B1", "Noto Sans JP", serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1b15; --surface: #172a21; --ink: #e8f0eb; --muted: #94a99d; --line: #2a4036;
+  --felt: #3fae82; --felt-ink: #08130e; --red: #ff7d6e; --sel: #21402f; --m: #ff7d6e; --p: #7fb2f0; --s: #5fcf9f; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0e1b15; --surface: #172a21; --ink: #e8f0eb; --muted: #94a99d; --line: #2a4036;
+  --felt: #3fae82; --felt-ink: #08130e; --red: #ff7d6e; --sel: #21402f; --m: #ff7d6e; --p: #7fb2f0; --s: #5fcf9f; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--font-num); font-size: 20px; margin: 0; letter-spacing: .04em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--felt); outline-offset: 2px; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 2px solid var(--felt); border-radius: 10px; overflow: hidden; }
+.seg button { background: transparent; border: 0; padding: 12px 8px; font-weight: 700; font-size: 17px; }
+.seg button[aria-pressed="true"] { background: var(--felt); color: var(--felt-ink); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .08em; margin-bottom: 6px; }
+.han { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.han button, .fu button { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 2px; font-weight: 700; font-size: 18px; font-variant-numeric: tabular-nums; }
+.han button small { display: block; font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.2; }
+.han button[aria-pressed="true"], .fu button[aria-pressed="true"] { background: var(--felt); border-color: var(--felt); color: var(--felt-ink); }
+.han button[aria-pressed="true"] small { color: inherit; }
+.fu { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.fu button { font-size: 15px; padding: 9px 0; }
+.answer { background: var(--surface); border: 2px solid var(--felt); border-radius: 14px; padding: 16px; text-align: center; display: flex; flex-direction: column; gap: 2px; }
+.answer .cond { color: var(--muted); font-size: 13px; font-weight: 500; }
+.answer .big { font-family: var(--font-num); font-weight: 800; font-size: clamp(44px, 14vw, 68px); line-height: 1.15; color: var(--red); font-variant-numeric: tabular-nums; }
+.answer .sub { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.answer .tag { align-self: center; background: var(--red); color: var(--surface); font-weight: 900; font-size: 13px; padding: 2px 10px; border-radius: 99px; margin-bottom: 4px; }
+.tbl { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.tbl h2 { font-size: 13px; margin: 0; padding: 10px 14px; color: var(--muted); letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+.tbl button { display: grid; grid-template-columns: 52px 1fr auto; align-items: baseline; gap: 8px; width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line); padding: 10px 14px; text-align: left; font-variant-numeric: tabular-nums; }
+.tbl button:last-child { border-bottom: 0; }
+.tbl button[aria-pressed="true"] { background: var(--sel); }
+.tbl .f { color: var(--muted); font-size: 13px; font-weight: 700; }
+.tbl .p { font-size: 20px; font-weight: 700; }
+.tbl .t { color: var(--muted); font-size: 12px; }
+.tbl .na { color: var(--muted); opacity: .6; }
+.photo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.photo summary { padding: 12px 14px; font-weight: 700; cursor: pointer; }
+.pbody { padding: 4px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.vh { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.filebtn { display: inline-block; background: var(--felt); color: var(--felt-ink); font-weight: 700; padding: 12px 16px; border-radius: 10px; cursor: pointer; }
+.vh:focus-visible + .filebtn { outline: 3px solid var(--ink); outline-offset: 2px; }
+.prow { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+#thumb { max-height: 120px; max-width: 100%; border-radius: 8px; border: 1px solid var(--line); }
+.pbody input[type=text], .pbody select { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); }
+.pbody .label { margin-bottom: 4px; }
+.pbody textarea { width: 100%; font: inherit; font-size: 16px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); resize: vertical; }
+.step { width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: 20px; font-weight: 700; }
+.hv { min-width: 2ch; text-align: center; font-size: 22px; font-variant-numeric: tabular-nums; }
+.msg { font-size: 13px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { min-width: 38px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); font-weight: 700; font-size: 16px; }
+.chip.cm { color: var(--m); } .chip.cp { color: var(--p); } .chip.cs { color: var(--s); }
+.chip[aria-pressed="true"] { outline: 3px solid var(--felt); background: var(--sel); }
+.fures { display: flex; flex-direction: column; gap: 10px; }
+.fubig { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.fubig b { font-family: var(--font-num); font-size: 44px; line-height: 1.1; color: var(--red); }
+.fubig span { font-weight: 700; }
+.fulist { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 2px; }
+.usebtn { background: var(--felt); color: var(--felt-ink); border: 0; border-radius: 10px; padding: 12px; font-weight: 700; font-size: 16px; }
+.err { color: var(--red); font-weight: 700; font-size: 14px; }
+.tips { font-size: 13px; color: var(--muted); display: grid; gap: 4px; }
+.tips b { color: var(--ink); }
+</style>
+</head>
+<body>
+
+
+<main>
+  <h1>麻雀点数早見</h1>
+
+  <section class="photo" id="quick" hidden>
+    <div class="pbody">
+      <div class="label" style="margin:0">写真と声でまとめて入力</div>
+      <div class="prow" id="qshotrow" hidden>
+        <input type="file" id="qshot" class="vh" accept="image/*">
+        <label class="filebtn" for="qshot">手牌の写真を選ぶ・撮る</label>
+        <img id="qthumb" alt="選んだ手牌の写真" hidden>
+      </div>
+      <div><label class="label" for="qtext">状況を話す(キーボードのマイクボタンで音声入力)</label>
+        <textarea id="qtext" rows="3" placeholder="例: 親で東1局2本場、ツモ、リーチ、ドラ2"></textarea></div>
+      <button type="button" class="usebtn" id="qgo">計算する</button>
+      <div class="msg" id="qmsg" aria-live="polite"></div>
+      <ul class="fulist" id="qyaku"></ul>
+    </div>
+  </section>
+
+  <div class="row2">
+    <div><div class="label">自分は</div>
+      <div class="seg" id="seat"><button data-v="child" aria-pressed="true">子</button><button data-v="dealer" aria-pressed="false">親</button></div></div>
+    <div><div class="label">あがり方</div>
+      <div class="seg" id="way"><button data-v="ron" aria-pressed="true">ロン</button><button data-v="tsumo" aria-pressed="false">ツモ</button></div></div>
+  </div>
+
+  <div class="prow"><span class="label" style="margin:0">本場</span>
+    <button type="button" class="step" id="hm" aria-label="本場を減らす">−</button><b class="hv" id="hv">0</b><button type="button" class="step" id="hp" aria-label="本場を増やす">＋</button></div>
+
+  <div><div class="label">翻</div><div class="han" id="han"></div></div>
+
+  <div id="fuwrap"><div class="label">符</div><div class="fu" id="fu"></div></div>
+
+  <details class="photo" id="photo">
+    <summary>符が分からないとき(写真で計算)</summary>
+    <div class="pbody">
+      <div class="prow" id="shotrow" hidden>
+        <input type="file" id="shot" class="vh" accept="image/*">
+        <label class="filebtn" for="shot">手牌の写真を選ぶ・撮る</label>
+        <img id="thumb" alt="選んだ手牌の写真" hidden>
+      </div>
+      <div class="msg" id="nophoto">写真の読み取りは、Claudeアプリで開いたときに使えます。ここでは手牌を文字で入力して符を計算できます。</div>
+      <div class="msg" id="readmsg" aria-live="polite" hidden></div>
+      <div><label class="label" for="hand">手牌(副露を除く)</label>
+        <input type="text" id="hand" autocomplete="off" autocapitalize="off" placeholder="例 234m567p88s11z33m"></div>
+      <div><label class="label" for="melds">副露(チー・ポン・カン)</label>
+        <input type="text" id="melds" autocomplete="off" autocapitalize="off" placeholder="例 456m 777p (1111s)"></div>
+      <div class="msg">萬=m 筒=p 索=s 字牌=z(1東 2南 3西 4北 5白 6發 7中)。カンは4枚、暗カンは(1111s)のようにかっこで囲みます。</div>
+      <div><div class="label">あがり牌をタップ</div><div class="chips" id="chips"></div></div>
+      <div class="row2">
+        <div><label class="label" for="rw">場風</label><select id="rw"></select></div>
+        <div><label class="label" for="sw">自風</label><select id="sw"></select></div>
+      </div>
+      <div class="fures" id="fures" aria-live="polite"></div>
+    </div>
+  </details>
+
+  <section class="answer" aria-live="polite" id="answer"></section>
+
+  <section class="tbl" id="tbl"></section>
+
+  <div class="tips">
+    <div><b>20符</b> 平和ツモ　<b>25符</b> 七対子　<b>30符</b> 門前ロンの基本形　<b>40符</b> 悩んだらここから確認</div>
+    <div>1・2翻の点数は符で大きく変わります。符が分からないときは30符を見てください。</div>
+  </div>
+</main>
+
+<script>
+(function () {
+  var HAN = [
+    { v: 1, t: '1', s: '翻' }, { v: 2, t: '2', s: '翻' }, { v: 3, t: '3', s: '翻' }, { v: 4, t: '4', s: '翻' },
+    { v: 5, t: '5', s: '満貫' }, { v: 6, t: '6-7', s: '跳満' }, { v: 8, t: '8-10', s: '倍満' },
+    { v: 11, t: '11-12', s: '三倍満' }, { v: 13, t: '13+', s: '役満' }
+  ];
+  var FUS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
+  var st = { dealer: false, tsumo: false, han: 2, fu: 30, honba: 0 };
+  try { var saved = JSON.parse(localStorage.getItem('mj-state')); if (saved) st = Object.assign(st, saved); } catch (e) {}
+
+  var up = function (x) { return Math.ceil(x / 100) * 100; };
+  var yen = function (n) { return n.toLocaleString('ja-JP'); };
+
+  function valid(han, fu, tsumo) {
+    if (han >= 5) return true;
+    if (fu === 25) return han >= 2;                // 25符は七対子(2翻以上)
+    if (fu === 20) return tsumo && han >= 2;       // 20符は平和ツモ
+    return true;
+  }
+  function calc(han, fu, dealer, tsumo, honba) {
+    honba = honba || 0;
+    var base, name = '';
+    if (han >= 13) { base = 8000; name = '役満'; }
+    else if (han >= 11) { base = 6000; name = '三倍満'; }
+    else if (han >= 8) { base = 4000; name = '倍満'; }
+    else if (han >= 6) { base = 3000; name = '跳満'; }
+    else if (han >= 5) { base = 2000; name = '満貫'; }
+    else { base = fu * Math.pow(2, han + 2); if (base >= 2000) { base = 2000; name = '満貫'; } }
+    var r = { name: name };
+    if (!tsumo) { r.total = up(base * (dealer ? 6 : 4)) + 300 * honba; r.main = yen(r.total) + '点'; r.short = yen(r.total); }
+    else if (dealer) { var a = up(base * 2) + 100 * honba; r.total = a * 3; r.main = yen(a) + 'オール'; r.short = yen(a) + ' オール'; r.sub = '合計 ' + yen(r.total) + '点'; }
+    else { var c = up(base) + 100 * honba, p = up(base * 2) + 100 * honba; r.total = c * 2 + p; r.main = yen(c) + '・' + yen(p); r.short = yen(c) + '・' + yen(p); r.sub = '子 ' + yen(c) + ' / 親 ' + yen(p) + '　合計 ' + yen(r.total) + '点'; }
+    return r;
+  }
+  function hanLabel(h) {
+    var x = HAN.filter(function (e) { return e.v === h; })[0];
+    return h >= 5 ? x.s : h + '翻';
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function save() { try { localStorage.setItem('mj-state', JSON.stringify(st)); } catch (e) {} }
+
+  function render() {
+    // segmented
+    [['seat', st.dealer ? 'dealer' : 'child'], ['way', st.tsumo ? 'tsumo' : 'ron']].forEach(function (p) {
+      Array.prototype.forEach.call($(p[0]).children, function (b) { b.setAttribute('aria-pressed', String(b.dataset.v === p[1])); });
+    });
+    // han
+    $('han').innerHTML = HAN.map(function (h) {
+      return '<button data-h="' + h.v + '" aria-pressed="' + (h.v === st.han || (st.han > h.v && st.han < (HAN[HAN.indexOf(h) + 1] || { v: 99 }).v && h.v >= 5)) + '">' + h.t + '<small>' + h.s + '</small></button>';
+    }).join('');
+    var limit = st.han >= 5;
+    $('fuwrap').hidden = limit;
+    $('fu').innerHTML = FUS.map(function (f) {
+      var ok = valid(st.han, f, st.tsumo);
+      return '<button data-f="' + f + '" aria-pressed="' + (f === st.fu) + '"' + (ok ? '' : ' disabled style="opacity:.3"') + '>' + f + '</button>';
+    }).join('');
+
+    // answer
+    $('hv').textContent = st.honba || 0;
+    var cond = (st.honba ? st.honba + '本場・' : '') + (st.dealer ? '親' : '子') + '・' + (st.tsumo ? 'ツモ' : 'ロン') + '・' + (limit ? hanLabel(st.han) : st.han + '翻' + st.fu + '符');
+    if (!valid(st.han, st.fu, st.tsumo)) {
+      $('answer').innerHTML = '<div class="cond">' + cond + '</div><div class="sub">この組み合わせは出ません</div><div class="cond">' +
+        (st.fu === 25 ? '25符は七対子(2翻以上)だけです。' : st.fu === 20 ? '20符は平和ツモ(2翻以上)だけです。' : '') + '</div>';
+    } else {
+      var r = calc(st.han, st.fu, st.dealer, st.tsumo, st.honba);
+      $('answer').innerHTML = (r.name ? '<span class="tag">' + r.name + '</span>' : '') +
+        '<div class="cond">' + cond + '</div><div class="big">' + r.main + '</div>' + (r.sub ? '<div class="sub">' + r.sub + '</div>' : '');
+    }
+
+    // table
+    if (limit) { $('tbl').innerHTML = ''; $('tbl').hidden = true; }
+    else {
+      $('tbl').hidden = false;
+      $('tbl').innerHTML = '<h2>' + st.han + '翻の早見表(' + (st.dealer ? '親' : '子') + '・' + (st.tsumo ? 'ツモ' : 'ロン') + ')</h2>' +
+        FUS.map(function (f) {
+          if (!valid(st.han, f, st.tsumo)) return '<button disabled class="na"><span class="f">' + f + '符</span><span class="p">—</span><span class="t"></span></button>';
+          var r = calc(st.han, f, st.dealer, st.tsumo, st.honba);
+          return '<button data-f="' + f + '" aria-pressed="' + (f === st.fu) + '"><span class="f">' + f + '符</span><span class="p">' + r.short + '</span><span class="t">' + (r.name || (st.tsumo ? '合計 ' + yen(r.total) : '')) + '</span></button>';
+        }).join('');
+    }
+  }
+
+  $('seat').onclick = function (e) { var v = e.target.dataset.v; if (v) { st.dealer = v === 'dealer'; save(); render(); } };
+  $('way').onclick = function (e) {
+    var v = e.target.dataset.v; if (!v) return;
+    st.tsumo = v === 'tsumo';
+    if (!valid(st.han, st.fu, st.tsumo)) st.fu = 30;
+    save(); render();
+  };
+  $('han').onclick = function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    st.han = +b.dataset.h;
+    if (!valid(st.han, st.fu, st.tsumo)) st.fu = 30;
+    save(); render();
+  };
+  function pickFu(e) { var b = e.target.closest('button[data-f]'); if (b && !b.disabled) { st.fu = +b.dataset.f; save(); render(); } }
+  $('fu').onclick = pickFu; $('tbl').onclick = pickFu;
+  /* ---- 手牌から符を計算(写真はClaudeが読み取り、符は下の計算で出す) ---- */
+  var SUITS = ['萬', '筒', '索'], HON = ['東', '南', '西', '北', '白', '發', '中'];
+  var tname = function (i) { return i < 27 ? (i % 9 + 1) + SUITS[Math.floor(i / 9)] : HON[i - 27]; };
+  var th = function (i) { return i >= 27 || i % 9 === 0 || i % 9 === 8; };
+  var WAITS = { ryanmen: '両面待ち', kanchan: '嵌張待ち', penchan: '辺張待ち', tanki: '単騎待ち', shanpon: '双碰待ち' };
+  var ph = { win: -1, rw: 0, sw: st.dealer ? 0 : 1, fu: 0 };
+
+  function parseTiles(s) {
+    var out = [], buf = [];
+    s = s.replace(/[\s,]/g, '');
+    for (var k = 0; k < s.length; k++) {
+      var ch = s[k];
+      if (/[0-9]/.test(ch)) buf.push(ch === '0' ? 5 : +ch);
+      else if (/[mpsz]/.test(ch)) {
+        var base = { m: 0, p: 9, s: 18, z: 27 }[ch];
+        for (var j = 0; j < buf.length; j++) {
+          if (ch === 'z' && (buf[j] < 1 || buf[j] > 7)) return null;
+          if (buf[j] < 1) return null;
+          out.push(base + buf[j] - 1);
+        }
+        buf = [];
+      } else return null;
+    }
+    return buf.length ? null : out;
+  }
+  function parseMelds(s) {
+    var out = [], toks = s.trim().split(/\s+/).filter(Boolean);
+    for (var k = 0; k < toks.length; k++) {
+      var closed = /^[(（]/.test(toks[k]);
+      var t = parseTiles(toks[k].replace(/[()（）]/g, ''));
+      if (!t) return null;
+      t.sort(function (a, b) { return a - b; });
+      var same = t.every(function (x) { return x === t[0]; });
+      if (t.length === 4 && same) out.push({ kind: 'kan', i: t[0], closed: closed });
+      else if (t.length === 3 && same) out.push({ kind: 'pon', i: t[0], closed: false });
+      else if (t.length === 3 && t[0] < 27 && t[0] % 9 <= 6 && t[1] === t[0] + 1 && t[2] === t[0] + 2) out.push({ kind: 'chi', i: t[0], closed: false });
+      else return null;
+    }
+    return out;
+  }
+
+  function fuCalc(tiles, melds, win, tsumo, rw, sw) {
+    var need = 4 - melds.length;
+    if (need < 0) return { error: '副露が多すぎます。' };
+    if (tiles.length !== 2 + 3 * need) return { error: '手牌は' + (2 + 3 * need) + '枚のはずですが、' + tiles.length + '枚になっています。' };
+    var c = [], i;
+    for (i = 0; i < 34; i++) c.push(0);
+    tiles.forEach(function (t) { c[t]++; });
+    if (c.some(function (n) { return n > 4; })) return { error: '同じ牌が5枚以上あります。' };
+    var menzen = melds.every(function (m) { return m.closed; });
+    var best = null;
+    function consider(r) { if (!best || r.fu > best.fu) best = r; }
+
+    function sets(i) {
+      while (i < 34 && c[i] === 0) i++;
+      if (i >= 34) return [[]];
+      var res = [];
+      if (c[i] >= 3) { c[i] -= 3; sets(i).forEach(function (r) { res.push([{ t: 'tri', i: i }].concat(r)); }); c[i] += 3; }
+      if (i < 27 && i % 9 <= 6 && c[i + 1] > 0 && c[i + 2] > 0) {
+        c[i]--; c[i + 1]--; c[i + 2]--;
+        sets(i).forEach(function (r) { res.push([{ t: 'seq', i: i }].concat(r)); });
+        c[i]++; c[i + 1]++; c[i + 2]++;
+      }
+      return res;
+    }
+    function score(p, groups, o) {
+      var items = [['副底', 20]], raw = 20;
+      var add = function (label, n) { if (n) { items.push([label, n]); raw += n; } };
+      var pairFu = (p >= 31 ? 2 : 0) + (p === 27 + rw ? 2 : 0) + (p === 27 + sw ? 2 : 0);
+      var wait;
+      if (o.pair) wait = 'tanki';
+      else {
+        var g = groups[o.gi];
+        if (g.t === 'tri') wait = 'shanpon';
+        else {
+          var d = win - g.i, s = g.i % 9;
+          wait = d === 1 ? 'kanchan' : ((d === 0 && s === 6) || (d === 2 && s === 0)) ? 'penchan' : 'ryanmen';
+        }
+      }
+      var allSeq = melds.every(function (m) { return m.kind === 'chi'; }) && groups.every(function (g) { return g.t === 'seq'; });
+      var pinfu = menzen && allSeq && pairFu === 0 && wait === 'ryanmen';
+      if (menzen && !tsumo) add('門前ロン', 10);
+      if (tsumo && !pinfu) add('ツモ', 2);
+      groups.forEach(function (g, gi) {
+        if (g.t !== 'tri') return;
+        var openRon = !tsumo && o.gi === gi;
+        add(tname(g.i) + (openRon ? 'の刻子(ロンであがった牌で明刻扱い)' : 'の暗刻'), (th(g.i) ? 4 : 2) * (openRon ? 1 : 2));
+      });
+      melds.forEach(function (m) {
+        if (m.kind === 'pon') add(tname(m.i) + 'のポン', th(m.i) ? 4 : 2);
+        if (m.kind === 'kan') add(tname(m.i) + (m.closed ? 'の暗槓' : 'の明槓'), (th(m.i) ? 4 : 2) * (m.closed ? 16 : 8) / 2);
+      });
+      if (p >= 31) add('三元牌の雀頭', 2);
+      if (p === 27 + rw) add('場風の雀頭', 2);
+      if (p === 27 + sw) add('自風の雀頭', 2);
+      if (wait === 'kanchan' || wait === 'penchan' || wait === 'tanki') add(WAITS[wait], 2);
+      var fu = Math.ceil(raw / 10) * 10;
+      if (!menzen && fu === 20) fu = 30;
+      return { fu: fu, raw: raw, items: items, wait: wait, pinfu: pinfu };
+    }
+
+    if (!melds.length && c.filter(function (n) { return n === 2; }).length === 7) consider({ fu: 25, raw: 25, items: [['七対子', 25]], wait: null });
+    for (var p = 0; p < 34; p++) {
+      if (c[p] < 2) continue;
+      c[p] -= 2;
+      sets(0).forEach(function (groups) {
+        if (groups.length !== need) return;
+        var opts = [];
+        if (win === p) opts.push({ pair: true });
+        groups.forEach(function (g, gi) { if (g.t === 'seq' ? (win >= g.i && win <= g.i + 2) : win === g.i) opts.push({ gi: gi }); });
+        opts.forEach(function (o) { consider(score(p, groups, o)); });
+      });
+      c[p] += 2;
+    }
+    return best || { error: '和了の形(4組と雀頭)になっていません。牌を確かめてください。' };
+  }
+
+  var esc = function (s) { return String(s).replace(/[&<>]/g, function (ch) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]; }); };
+  function renderFu() {
+    var out = $('fures'), hs = $('hand').value;
+    var tiles = parseTiles(hs), melds = parseMelds($('melds').value);
+    $('chips').innerHTML = '';
+    if (!hs.trim()) { out.innerHTML = '<div class="msg">手牌を入力するか、写真を選んでください。</div>'; return; }
+    if (!tiles) { out.innerHTML = '<div class="err">手牌に読めない文字があります。例のように「数字+m/p/s/z」で書いてください。</div>'; return; }
+    if (ph.win < 0 || ph.win >= tiles.length) ph.win = tiles.length - 1;
+    $('chips').innerHTML = tiles.map(function (t, k) {
+      return '<button type="button" class="chip ' + (t < 27 ? 'c' + 'mps'[Math.floor(t / 9)] : '') + '" data-k="' + k + '" aria-pressed="' + (k === ph.win) + '">' + tname(t) + '</button>';
+    }).join('');
+    if (!melds) { out.innerHTML = '<div class="err">副露の書き方が正しくありません。チー・ポンは3枚、カンは4枚で、例のように書いてください。</div>'; return; }
+    var r = fuCalc(tiles, melds, tiles[ph.win], st.tsumo, ph.rw, ph.sw);
+    if (r.error) { out.innerHTML = '<div class="err">' + esc(r.error) + '</div>'; ph.fu = 0; return; }
+    ph.fu = r.fu;
+    out.innerHTML = '<div class="fubig"><b>' + r.fu + '符</b><span>' + (st.tsumo ? 'ツモ' : 'ロン') + (r.wait ? '・' + WAITS[r.wait] : '') + (r.pinfu ? '・平和形' : '') + '</span></div>' +
+      '<ul class="fulist">' + r.items.map(function (x) { return '<li>' + esc(x[0]) + ' ' + x[1] + '符</li>'; }).join('') +
+      (r.raw !== r.fu ? '<li>合計' + r.raw + '符 → 10符単位に切り上げ</li>' : '') + '</ul>' +
+      '<div class="msg">ロン/ツモは上の設定を使っています。</div>' +
+      '<button type="button" class="usebtn" id="usefu">この符(' + r.fu + '符)で点数を見る</button>';
+  }
+
+  $('rw').innerHTML = $('sw').innerHTML = ['東', '南', '西', '北'].map(function (w, k) { return '<option value="' + k + '">' + w + '</option>'; }).join('');
+  $('rw').value = ph.rw; $('sw').value = ph.sw;
+  $('rw').onchange = function () { ph.rw = +this.value; renderFu(); };
+  $('sw').onchange = function () { ph.sw = +this.value; renderFu(); };
+  $('hand').oninput = $('melds').oninput = function () { ph.win = -1; renderFu(); };
+  $('chips').onclick = function (e) { var b = e.target.closest('button[data-k]'); if (b) { ph.win = +b.dataset.k; renderFu(); } };
+  $('fures').onclick = function (e) {
+    if (!e.target.closest('#usefu')) return;
+    st.fu = ph.fu; st.dealer = ph.sw === 0; save(); render();
+    try { $('answer').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {}
+  };
+
+  var PROMPT = 'This is a photo of a Japanese riichi mahjong hand: a player\'s tiles, possibly with exposed melds set to the side. Read every tile. ' +
+    'Notation: digits followed by a suit letter. m = characters (萬子), p = circles (筒子), s = bamboo (索子), z = honors with 1=東 East, 2=南 South, 3=西 West, 4=北 North, 5=白 white dragon, 6=發 green dragon, 7=中 red dragon. Treat red fives as plain 5. A suit letter may repeat. ' +
+    'Reply with only a JSON object {"hand": string, "melds": string[], "note": string}. ' +
+    '"hand" = the concealed tiles left to right, excluding exposed melds; if one tile is clearly set apart from the rest (the winning or drawn tile), put it LAST. ' +
+    '"melds" = exposed groups (chi, pon, open kan) as strings like "456m", "777p", "1111z"; a kan whose outer tiles are face down (closed kan) goes in parentheses like "(1111s)". ' +
+    '"note" = one short sentence in Japanese about anything unclear (blurry tile, cannot tell which tile won), or an empty string. ' +
+    'Example: {"hand":"234m567p55s","melds":["777z"],"note":""}';
+  var ERR = {
+    not_granted: 'Claudeの利用が許可されていません。手牌は文字で入力できます。',
+    rate_limited: '短時間に使いすぎました。少し待ってからもう一度お試しください。',
+    image_rejected: 'この画像は読み取れません。別の写真を選んでください。',
+    invalid_json: '牌をうまく読み取れませんでした。明るい場所で撮り直すか、手牌を入力してください。'
+  };
+  var samp = null, imgOK = false;
+  function setShot() { $('shotrow').hidden = !imgOK; $('nophoto').hidden = imgOK; $('quick').hidden = !samp; $('qshotrow').hidden = !imgOK; }
+  (async function () {
+    try {
+      if (window.claude && window.claude.use) {
+        samp = await window.claude.use('sample');
+        if (samp) {
+          var lim = await samp.limits().catch(function () { return null; });
+          imgOK = !!(lim && lim.images);
+          if (imgOK) $('shot').accept = lim.images.mediaTypes.join(',');
+        }
+      }
+    } catch (e) {}
+    setShot();
+  })();
+  $('shot').onchange = async function () {
+    var f = this.files && this.files[0];
+    if (!f || !samp) return;
+    try { $('thumb').src = URL.createObjectURL(f); $('thumb').hidden = false; } catch (e) {}
+    var rm = $('readmsg');
+    rm.hidden = false; rm.textContent = '牌を読み取っています…';
+    try {
+      var r = await samp.json(PROMPT, { images: f, modelTier: 'default' });
+      $('hand').value = String(r.hand || '');
+      $('melds').value = Array.isArray(r.melds) ? r.melds.join(' ') : '';
+      ph.win = -1;
+      rm.textContent = '読み取り結果です。違う牌があれば直してください。' + (r.note ? ' ' + r.note : '');
+      renderFu();
+    } catch (e) {
+      rm.textContent = ERR[e && e.code] || '読み取りに失敗しました。もう一度試すか、手牌を入力してください。';
+    }
+  };
+
+  /* ---- 写真と話した内容から、場況・役・符をまとめて入力 ---- */
+  $('hm').onclick = function () { st.honba = Math.max(0, (st.honba || 0) - 1); save(); render(); };
+  $('hp').onclick = function () { st.honba = Math.min(20, (st.honba || 0) + 1); save(); render(); };
+  var qfile = null;
+  var QPROMPT = 'You help a Japanese riichi mahjong player work out a score. You get a short Japanese description of the situation and, sometimes, a photo of the winning hand. ' +
+    'Tile notation: digits followed by a suit letter. m = characters (萬子), p = circles (筒子), s = bamboo (索子), z = honors with 1=東 2=南 3=西 4=北 5=白 6=發 7=中. Red fives are plain 5. A suit letter may repeat. ' +
+    'Reply with only a JSON object: {"hand": string, "melds": string[], "dealer": boolean|null, "roundWind": 0-3|null, "seatWind": 0-3|null, "tsumo": boolean|null, "honba": integer|null, "fu": integer|null, "yaku": [{"name": string, "han": integer}], "note": string}. ' +
+    'hand = concealed tiles left to right, excluding exposed melds, with the winning tile LAST if it is set apart; empty string if no photo. melds = exposed groups like "456m", "777p", "1111z"; closed kan in parentheses like "(1111s)". ' +
+    'dealer: true if the player said 親, false if 子, else null. roundWind and seatWind: 0=東 1=南 2=西 3=北 ("東1局" means roundWind 0; "南2局" means roundWind 1). tsumo: true for ツモ, false for ロン, else null. honba: the number in "N本場", else null. fu: only if the player stated the fu, else null. ' +
+    'yaku: every yaku that applies, using the photo and what was said, plus dora the player mentioned as {"name":"ドラ","han":N} (include 赤ドラ and 裏ドラ the same way). Never invent riichi, ippatsu or dora that was not said. Apply the standard rules: riichi and pinfu need a closed hand; menzen tsumo is 1 han; open hands lose 1 han on chanta, ittsu, sanshoku, honitsu and chinitsu; tanyao is allowed when open; yakuman counts 13 han each. ' +
+    'note: one short Japanese sentence about anything unclear, or an empty string.';
+  $('qshot').onchange = function () {
+    qfile = (this.files && this.files[0]) || null;
+    try { if (qfile) { $('qthumb').src = URL.createObjectURL(qfile); $('qthumb').hidden = false; } } catch (e) {}
+  };
+  function applyQuick(r) {
+    var notes = [], int = Number.isInteger;
+    if (typeof r.tsumo === 'boolean') st.tsumo = r.tsumo;
+    if (int(r.roundWind) && r.roundWind >= 0 && r.roundWind < 4) ph.rw = r.roundWind;
+    if (int(r.seatWind) && r.seatWind >= 0 && r.seatWind < 4) ph.sw = r.seatWind;
+    else if (r.dealer === true) ph.sw = 0;
+    else if (r.dealer === false && ph.sw === 0) ph.sw = 1;
+    st.dealer = ph.sw === 0;
+    $('rw').value = ph.rw; $('sw').value = ph.sw;
+    if (int(r.honba) && r.honba >= 0) st.honba = Math.min(20, r.honba);
+    if (typeof r.hand === 'string' && r.hand.trim()) {
+      $('hand').value = r.hand; $('melds').value = Array.isArray(r.melds) ? r.melds.join(' ') : '';
+      ph.win = -1; ph.fu = 0; renderFu();
+      if (ph.fu) st.fu = ph.fu; else notes.push('手牌から符を出せませんでした。「符が分からないとき」で手牌を直してください。');
+    } else if (int(r.fu) && FUS.indexOf(r.fu) >= 0) st.fu = r.fu;
+    else notes.push('符が分からないので、符を選んでください。');
+    var yaku = Array.isArray(r.yaku) ? r.yaku : [], sum = 0;
+    yaku.forEach(function (y) { sum += Math.max(0, Math.floor(+y.han || 0)); });
+    $('qyaku').innerHTML = yaku.map(function (y) { return '<li>' + esc(y.name) + ' ' + esc(+y.han || 0) + '翻</li>'; }).join('');
+    if (sum > 0) st.han = Math.min(13, sum); else notes.push('翻数を決められませんでした。翻を選んでください。');
+    if (r.note) notes.push(String(r.note));
+    $('qmsg').textContent = (sum > 0 ? '合計' + sum + '翻。' : '') + '役と牌は読み取り結果です。違うところがあれば直してください。 ' + notes.join(' ');
+    save(); render();
+    try { $('answer').scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {}
+  }
+  $('qgo').onclick = async function () {
+    var btn = this, txt = $('qtext').value.trim();
+    if (!samp) return;
+    if (!qfile && !txt) { $('qmsg').textContent = '写真を選ぶか、状況を話してください。'; return; }
+    btn.disabled = true; $('qyaku').innerHTML = ''; $('qmsg').textContent = '読み取っています…';
+    try {
+      var opts = { modelTier: 'default' };
+      if (qfile && imgOK) opts.images = qfile;
+      var r = await samp.json(QPROMPT + '\n\nPlayer description: ' + (txt ? JSON.stringify(txt) : '(none)') + (opts.images ? '\nA photo of the hand is attached.' : '\nNo photo is attached.'), opts);
+      applyQuick(r || {});
+    } catch (e) {
+      $('qmsg').textContent = ERR[e && e.code] || '読み取りに失敗しました。もう一度試してください。';
+    }
+    btn.disabled = false;
+  };
+
+  var baseRender = render;
+  render = function () { baseRender(); renderFu(); };
+  render();
+})();
+</script>
+
+</body>
+</html>

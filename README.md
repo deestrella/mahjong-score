@@ -34,6 +34,7 @@ Gemini API(無料枠)… 牌を読み取って JSON で返す
 | `samples/` | テスト用の手牌画像(描いた絵)と正解表 |
 | `tools/draw_samples.py` | サンプル画像を描くスクリプト(Python + Pillow) |
 | `archive/claude-artifact.html` | Claude のアーティファクト版(参考。今後は更新しない) |
+| `archive/quick.html` | 旧リポジトリ `mahjong-score-quick` の1ファイル版(参考。今後は更新しない) |
 | `docs/TODO.md` | 既知の課題・改善アイデア |
 | `CLAUDE.md` | Claude Code 向けの作業メモ |
 

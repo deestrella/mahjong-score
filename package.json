@@ -1,0 +1,11 @@
+{
+  "name": "mahjong-score",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.48.2"
+  }
+}

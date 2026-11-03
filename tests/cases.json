@@ -1,0 +1,10 @@
+[
+  { "name": "sample1 平和・断么九・一盃口", "hand": "234m234m567p67s55p8s", "melds": "", "rw": 0, "sw": 1, "way": "ron", "expect": "3,900点" },
+  { "name": "sample2 一気通貫・中", "hand": "123p456p789p777z2s2s", "melds": "", "rw": 0, "sw": 1, "way": "ron", "expect": "5,200点" },
+  { "name": "sample3 七対子ツモ", "hand": "11m33m55p77p22s66s5z5z", "melds": "", "rw": 0, "sw": 1, "way": "tsumo", "expect": "800・1,600" },
+  { "name": "sample4 四暗刻ツモ", "hand": "222m555p888s555z9m9m", "melds": "", "rw": 0, "sw": 1, "way": "tsumo", "expect": "8,000・16,000" },
+  { "name": "sample5 親の混一色・東・發", "hand": "234s678s111z666z9s9s", "melds": "", "rw": 0, "sw": 0, "way": "ron", "expect": "18,000点" },
+  { "name": "sample6 一気通貫ツモ(辺張)", "hand": "12s456s789s234p99m3s", "melds": "", "rw": 0, "sw": 1, "way": "tsumo", "expect": "1,000・2,000" },
+  { "name": "東の暗槓・単騎", "hand": "234m567p678s88p", "melds": "(1111z)", "rw": 0, "sw": 1, "way": "ron", "expect": "2,300点" },
+  { "name": "明槓＋發ポン", "hand": "234m567p88p", "melds": "5555s 666z", "rw": 0, "sw": 1, "way": "ron", "expect": "1,300点" }
+]

@@ -795,7 +795,7 @@ button:disabled { cursor: default; }
   function applyHan() {
     if (!lastQ) return;
     var EXC = /リーチ|立直|一発|ドラ|海底|河底|嶺上|槍槓/;
-    var base = ph.res ? ph.res.yaku : (Array.isArray(lastQ.yaku) ? lastQ.yaku : []).filter(function (y) { return y && !EXC.test(String(y.name)); });
+    var base = ph.res ? ph.res.yaku : (lastQ.hand ? [] : Array.isArray(lastQ.yaku) ? lastQ.yaku : []).filter(function (y) { return y && !EXC.test(String(y.name)); });
     if (ph.res) st.fu = ph.res.fu;
     var all = base.concat(exList()), sum = 0, yakuHan = 0;
     all.forEach(function (y) { var h = Math.max(0, Math.floor(+y.han || 0)); sum += h; if (!/ドラ/.test(y.name)) yakuHan += h; });
@@ -829,6 +829,8 @@ button:disabled { cursor: default; }
   };
   function applyQuick(r) {
     var notes = [], int = Number.isInteger;
+    // 場風・自風・ロン/ツモ・本場は画面の設定を優先。メモに書いたときだけAIの結果で上書きする
+    if ($('qtext').value.trim()) {
     if (typeof r.tsumo === 'boolean') st.tsumo = r.tsumo;
     if (int(r.roundWind) && r.roundWind >= 0 && r.roundWind < 4) ph.rw = r.roundWind;
     if (int(r.seatWind) && r.seatWind >= 0 && r.seatWind < 4) ph.sw = r.seatWind;
@@ -836,6 +838,7 @@ button:disabled { cursor: default; }
     else if (r.dealer === false && ph.sw === 0) ph.sw = 1;
     st.dealer = ph.sw === 0;
     if (int(r.honba) && r.honba >= 0) st.honba = Math.min(20, r.honba);
+    }
     if (typeof r.hand === 'string' && r.hand.trim()) {
       $('hand').value = r.hand; $('melds').value = Array.isArray(r.melds) ? r.melds.join(' ') : '';
       ph.win = -1; ph.fu = 0; renderFu();

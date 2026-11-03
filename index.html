@@ -180,6 +180,8 @@ button:disabled { cursor: default; }
 .opt:disabled, .step:disabled { opacity: .35; cursor: not-allowed; }
 .tips { font-size: 12px; color: var(--muted); display: grid; gap: 4px; padding: 0 4px; }
 .tips b { color: var(--ink); }
+.credit { text-align: center; font-family: var(--font-num); font-size: 12px; letter-spacing: .14em; color: var(--muted); padding-top: 8px; }
+.credit b { font-family: var(--font-body); font-weight: 900; letter-spacing: .1em; color: var(--accent); }
 </style>
 </head>
 <body>
@@ -307,6 +309,7 @@ button:disabled { cursor: default; }
     <div><b>20符</b> 平和ツモ　<b>25符</b> 七対子　<b>30符</b> 門前ロンの基本形　<b>40符</b> 悩んだらここから確認</div>
     <div>1・2翻の点数は符で大きく変わります。符が分からないときは30符を見てください。</div>
   </div>
+  <footer class="credit">Produced by <b>シノビアンコ</b></footer>
 </main>
 
 <script>
@@ -677,7 +680,7 @@ button:disabled { cursor: default; }
     'Check your count: concealed tiles + melds must make a complete winning hand (14 tiles, plus 1 extra for each kan). If a tile count is off, re-check blank tiles as 白. ' +
     'Tell the suits apart carefully: 筒子 (p) show circles/dots, 索子 (s) show bamboo sticks (1s is usually a bird), 萬子 (m) show a kanji numeral above the red 萬 character. Count the circles or sticks one by one: 6, 7, 8 and 9 are easy to confuse. ';
   var imgTypes = ['image/jpeg'], imgMax = 1;
-  var IMGNOTE = function (n) { return n >= 2 ? '\nTwo images of the same hand are attached: the first is contrast-enhanced and sharpened, the second is the original. Use both; where they disagree, trust the clearer one.' : '\nThe attached image is contrast-enhanced.'; };
+  var IMGNOTE = function () { return ''; };
   var retryNote = function (r) { return '\nA first reading gave hand "' + String(r.hand || '') + '" and melds ' + JSON.stringify(r.melds || []) + ', which is NOT a valid complete winning hand. Re-read every tile carefully from scratch and fix the mistake.'; };
   function loadImg(file) { return new Promise(function (ok, ng) { var im = new Image(); im.onload = function () { ok(im); }; im.onerror = ng; im.src = URL.createObjectURL(file); }); }
   function toBlob(cv, type) { return new Promise(function (ok) { cv.toBlob(ok, type, 0.92); }); }
@@ -691,28 +694,7 @@ button:disabled { cursor: default; }
       var cx = cv.getContext('2d'); cx.drawImage(im, 0, 0, w, h);
       var type = imgTypes.indexOf('image/jpeg') >= 0 ? 'image/jpeg' : imgTypes[0];
       var orig = await toBlob(cv, type);
-      var d = cx.getImageData(0, 0, w, h), px = d.data, n = w * h, k, hist = new Uint32Array(256);
-      for (k = 0; k < px.length; k += 4) hist[(px[k] * 77 + px[k + 1] * 150 + px[k + 2] * 29) >> 8]++;
-      var lo = 0, hi = 255, acc = 0;
-      for (k = 0; k < 256; k++) { acc += hist[k]; if (acc > n * 0.01) { lo = k; break; } }
-      for (acc = 0, k = 255; k >= 0; k--) { acc += hist[k]; if (acc > n * 0.01) { hi = k; break; } }
-      var sc = 255 / Math.max(1, hi - lo), tmp = new Float32Array(px.length);
-      for (k = 0; k < px.length; k += 4) {
-        var r = (px[k] - lo) * sc, g = (px[k + 1] - lo) * sc, b = (px[k + 2] - lo) * sc, y = 0.299 * r + 0.587 * g + 0.114 * b;
-        tmp[k] = y + (r - y) * 1.35; tmp[k + 1] = y + (g - y) * 1.35; tmp[k + 2] = y + (b - y) * 1.35;
-      }
-      var W = w * 4;
-      for (k = 0; k < px.length; k += 4) {
-        var xx = (k / 4) % w, edge = xx === 0 || xx === w - 1 || k < W || k >= px.length - W;
-        for (var ch = 0; ch < 3; ch++) {
-          var i = k + ch;
-          px[i] = edge ? tmp[i] : 3 * tmp[i] - 0.5 * (tmp[i - 4] + tmp[i + 4] + tmp[i - W] + tmp[i + W]);
-        }
-      }
-      cx.putImageData(d, 0, 0);
-      var enh = await toBlob(cv, type);
-      if (!enh) return [file];
-      return imgMax >= 2 && orig ? [enh, orig] : [enh];
+      return orig ? [orig] : [file];
     } catch (e) { return [file]; }
   }
   var PROMPT = 'This is a photo of a Japanese riichi mahjong hand: a player\'s tiles, possibly with exposed melds set to the side. Read every tile. ' +
@@ -780,7 +762,6 @@ button:disabled { cursor: default; }
       var r = await samp.json(pr, { images: imgs, modelTier: 'default' });
       var put = function (x) { $('hand').value = String(x.hand || ''); $('melds').value = Array.isArray(x.melds) ? x.melds.join(' ') : ''; ph.win = -1; renderFu(); };
       put(r);
-      if (!ph.res) { rm.textContent = '手の形にならないので、高精度で読み直しています…'; r = await samp.json(pr + retryNote(r), { images: imgs, modelTier: 'complex' }); put(r); }
       rm.textContent = '読み取り結果です。違う牌があれば直してください。' + (r.note ? ' ' + r.note : '');
       after();
     } catch (e) {
@@ -915,19 +896,14 @@ button:disabled { cursor: default; }
       $('qhq').disabled = true;
       var opts = { modelTier: hq ? 'complex' : 'default' };
       if (qfile && imgOK) {
-        if (qprepFor !== qfile) { $('qmsg').textContent = '写真を見やすく加工しています…'; qprep = await prep(qfile); qprepFor = qfile; try { $('qthumb').src = URL.createObjectURL(qprep[0]); } catch (e) {} }
+        if (qprepFor !== qfile) { $('qmsg').textContent = '写真を準備しています…'; qprep = await prep(qfile); qprepFor = qfile; try { $('qthumb').src = URL.createObjectURL(qprep[0]); } catch (e) {} }
         opts.images = qprep;
         $('qmsg').textContent = hq ? '高精度で読み取っています…' : '読み取っています…';
       }
       var prompt = QPROMPT + '\n\nPlayer description: ' + (txt ? JSON.stringify(txt) : '(none)') + (opts.images ? '\nA photo of the hand is attached.' : '\nNo photo is attached.') + '\nCurrent settings on the screen (use these when the description does not say otherwise, and return them in dealer/tsumo): dealer=' + st.dealer + ', tsumo=' + st.tsumo + ', honba=' + (st.honba || 0) + ', roundWind=' + ph.rw + ', seatWind=' + ph.sw + ' (0=東 1=南 2=西 3=北; use these winds for 場風/自風 yakuhai).' + (opts.images ? IMGNOTE(opts.images.length) : '');
       var r = await samp.json(prompt, opts);
       applyQuick(r || {});
-      if (opts.images && !hq && r && r.hand && !ph.res) {
-        $('qmsg').textContent = '手の形にならないので、高精度で読み直しています…';
-        opts.modelTier = 'complex';
-        var r2 = await samp.json(prompt + retryNote(r), opts);
-        applyQuick(r2 || {});
-      }
+      if (opts.images && !hq && r && r.hand && !ph.res) $('qmsg').textContent += ' 読み取りが合わないときは「高精度で読み直す」を押してください。';
     } catch (e) {
       $('qmsg').textContent = ERR[e && e.code] || '読み取りに失敗しました。もう一度試してください。';
     }

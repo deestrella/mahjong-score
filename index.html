@@ -161,6 +161,20 @@ button:disabled { cursor: default; }
 .fubig b { font-family: var(--font-num); font-weight: 400; font-size: 40px; line-height: 1.1; color: var(--accent); }
 .fubig span { font-weight: 700; }
 
+.howto { background: var(--soft); border-radius: 14px; }
+.howto summary { padding: 11px 14px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.howto .hb { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.lay { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 10px; overflow-x: auto; }
+.lrow { display: flex; align-items: flex-end; gap: 8px; }
+.grp { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ts { display: flex; gap: 2px; align-items: flex-end; }
+.ts i { display: block; width: 10px; height: 14px; border-radius: 2px; background: var(--tile); border: 1px solid var(--tile-line); border-bottom: 3px solid var(--tile-edge); }
+.ts i.side { width: 14px; height: 10px; }
+.ts i.down { background: var(--tile-edge); }
+.ts i.win { background: var(--latte); border-color: var(--on); border-bottom-color: var(--on); }
+.grp small { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.hb ol { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 4px; }
+.opt:disabled, .step:disabled { opacity: .35; cursor: not-allowed; }
 .tips { font-size: 12px; color: var(--muted); display: grid; gap: 4px; padding: 0 4px; }
 .tips b { color: var(--ink); }
 </style>
@@ -193,6 +207,28 @@ button:disabled { cursor: default; }
           <label class="filebtn bigcam alt" for="qshot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M6 17l4.5-5 3.5 4 2-2 2.5 3"/></svg>写真から選ぶ</label></span>
         </div>
       </div>
+      <details class="howto">
+        <summary>撮り方のコツ(鳴き・カンがあるとき)</summary>
+        <div class="hb">
+          <div class="lay" aria-hidden="true">
+            <div class="lrow"><span class="grp"><span class="ts"><i></i></span><small>ドラ表示牌</small></span></div>
+            <div class="lrow">
+              <span class="grp"><span class="ts"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><small>手牌</small></span>
+              <span class="grp"><span class="ts"><i class="win"></i></span><small>あがり牌</small></span>
+              <span class="grp"><span class="ts"><i class="side"></i><i></i><i></i></span><small>ポン・チー</small></span>
+              <span class="grp"><span class="ts"><i class="down"></i><i></i><i></i><i class="down"></i></span><small>暗槓</small></span>
+            </div>
+          </div>
+          <ol>
+            <li>手牌は左から1列に並べます。萬子・筒子・索子・字牌の順に整えると、読み間違いが減ります。</li>
+            <li>あがり牌(ロン牌・ツモ牌)は1枚だけ、手牌の右に指1本ぶん離して置きます。</li>
+            <li>鳴いた面子(チー・ポン・明槓・加槓)は、あがり牌よりさらに右に、面子ごとにすき間をあけて置きます。横向きの牌はそのままで大丈夫です。</li>
+            <li>暗槓は両端の2枚を伏せて、鳴いた面子と同じ並びに置きます。</li>
+            <li>ドラを数えさせたいときは、ドラ表示牌を手牌の上の段に離して置きます。</li>
+            <li>真上から、すべての牌が1枚に入るように撮ります。影や照明の反射に気をつけてください。</li>
+          </ol>
+        </div>
+      </details>
       <img id="qthumb" alt="撮った手牌の写真" hidden>
       <div class="msg" id="qmsg" aria-live="polite">撮るか選ぶと、そのまま点数を計算します。</div>
       <ul class="fulist" id="qyaku"></ul>
@@ -206,6 +242,7 @@ button:disabled { cursor: default; }
           <button type="button" class="opt" data-x="rinshan" aria-pressed="false">嶺上開花</button>
           <button type="button" class="opt" data-x="chankan" aria-pressed="false">槍槓</button>
         </div></div>
+      <div class="msg" id="xlock" hidden>鳴いているので、リーチ・ダブリー・一発・裏ドラは選べません(暗槓だけならリーチできます)。</div>
       <div class="steps3" id="xsteps">
         <div class="stepbox"><span class="label">ドラ</span><div class="prow"><button type="button" class="step" data-d="dora" data-n="-1" aria-label="ドラを減らす">−</button><b class="hv" id="xv-dora">0</b><button type="button" class="step" data-d="dora" data-n="1" aria-label="ドラを増やす">＋</button></div></div>
         <div class="stepbox"><span class="label">赤ドラ</span><div class="prow"><button type="button" class="step" data-d="aka" data-n="-1" aria-label="赤ドラを減らす">−</button><b class="hv" id="xv-aka">0</b><button type="button" class="step" data-d="aka" data-n="1" aria-label="赤ドラを増やす">＋</button></div></div>
@@ -619,7 +656,7 @@ button:disabled { cursor: default; }
       '<button type="button" class="usebtn" id="usefu">この符(' + r.fu + '符)で点数を見る</button>';
   }
 
-  $('hand').oninput = $('melds').oninput = function () { ph.win = -1; renderFu(); after(); };
+  $('hand').oninput = $('melds').oninput = function () { ph.win = -1; renderFu(); renderEx(); after(); };
   $('chips').onclick = function (e) { var b = e.target.closest('button[data-k]'); if (b) { ph.win = +b.dataset.k; renderFu(); after(); } };
   $('fures').onclick = function (e) {
     if (!e.target.closest('#usefu')) return;
@@ -632,6 +669,7 @@ button:disabled { cursor: default; }
   var HAKU = 'IMPORTANT about 白 (white dragon, 5z): its face is plain white/ivory with NO symbol, sometimes with a thin blue or colored rectangular frame line, or completely blank. A blank white face is ALWAYS 白 (5z), never a face-down tile. ' +
     'A face-down tile shows the tile BACK, which is a solid colored surface (green, blue, yellow, orange, etc.) with no white face; only call a tile face-down when you clearly see that colored back. ' +
     'Face-down tiles appear only in a closed kan: exactly 4 identical tiles where the two OUTER tiles are face-down and the two middle tiles are face-up. Three blank white tiles in a row are a 白 triplet (555z), not face-down tiles. ' +
+    'Expected layout: concealed tiles in one row; the single winning tile (ron or tsumo tile) set a little apart to their right; called melds and closed kans further right or on a second row, each group separated by a gap; an optional dora indicator apart in a row above. Use these gaps to split the groups. ' +
     'Kans: an open kan (明槓) is 4 identical face-up tiles set to the side, often with one tile turned sideways; an added kan (加槓) is a pon with a 4th identical tile stacked on its sideways tile. Write both as open kans like "5555s". A closed kan (暗槓) is written in parentheses like "(5555s)". Never put a kan inside "hand". ' +
     'Check your count: concealed tiles + melds must make a complete winning hand (14 tiles, plus 1 extra for each kan). If a tile count is off, re-check blank tiles as 白. ' +
     'Tell the suits apart carefully: 筒子 (p) show circles/dots, 索子 (s) show bamboo sticks (1s is usually a bird), 萬子 (m) show a kanji numeral above the red 萬 character. Count the circles or sticks one by one: 6, 7, 8 and 9 are easy to confuse. ';
@@ -778,20 +816,26 @@ button:disabled { cursor: default; }
   var ex = { riichi: false, double: false, ippatsu: false, haitei: false, rinshan: false, chankan: false, dora: 0, aka: 0, ura: 0 };
   var lastQ = null, lastNotes = [], autoDora = null, autoInd = '';
   var XHAN = { double: ['ダブルリーチ', 2], riichi: ['リーチ', 1], ippatsu: ['一発', 1], haitei: ['', 1], rinshan: ['嶺上開花', 1], chankan: ['槍槓', 1] };
+  var LOCK = ['riichi', 'double', 'ippatsu'];
+  function isOpenHand() { var m = parseMelds($('melds').value || ''); return !!(m && m.some(function (x) { return !x.closed; })); }
   function exList() {
-    var out = [];
+    var out = [], open = isOpenHand();
     ['double', 'riichi', 'ippatsu', 'haitei', 'rinshan', 'chankan'].forEach(function (k) {
-      if (ex[k]) out.push({ name: k === 'haitei' ? (st.tsumo ? '海底摸月' : '河底撈魚') : XHAN[k][0], han: XHAN[k][1] });
+      if (ex[k] && !(open && LOCK.indexOf(k) >= 0)) out.push({ name: k === 'haitei' ? (st.tsumo ? '海底摸月' : '河底撈魚') : XHAN[k][0], han: XHAN[k][1] });
     });
     if (ex.dora) out.push({ name: 'ドラ', han: ex.dora });
     else if (autoDora) out.push({ name: 'ドラ(写真の表示牌から)', han: autoDora });
     if (ex.aka) out.push({ name: '赤ドラ', han: ex.aka });
-    if (ex.ura) out.push({ name: '裏ドラ', han: ex.ura });
+    if (ex.ura && !open) out.push({ name: '裏ドラ', han: ex.ura });
     return out;
   }
   function renderEx() {
     Array.prototype.forEach.call($('xopts').children, function (b) { b.setAttribute('aria-pressed', String(!!ex[b.dataset.x])); });
     ['dora', 'aka', 'ura'].forEach(function (k) { $('xv-' + k).textContent = ex[k]; });
+    var open = isOpenHand();
+    Array.prototype.forEach.call($('xopts').children, function (b) { b.disabled = open && LOCK.indexOf(b.dataset.x) >= 0; });
+    Array.prototype.forEach.call(document.querySelectorAll('#xsteps [data-d="ura"]'), function (b) { b.disabled = open; });
+    $('xlock').hidden = !open;
   }
   function applyHan() {
     if (!lastQ) return;
@@ -890,7 +934,7 @@ button:disabled { cursor: default; }
   $('qhq').onclick = function () { runQuick(true); };
 
   var baseRender = render;
-  render = function () { baseRender(); renderFu(); };
+  render = function () { baseRender(); renderFu(); renderEx(); };
   render();
 })();
 </script>

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>麻雀点数早見</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Jost:wght@300;400;500&family=DM+Mono:wght@500&display=swap">
+<title>忍び暗刻作 点数早見シート</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Dela+Gothic+One&family=Jost:wght@300;400;500&family=DM+Mono:wght@500&display=swap">
 <style>
 /* 明るい一色(紺)だけのデザイン。ダークモードでも明るいまま表示する。
    Layout: カフェのメニューのように、余白多めの白いカードを一列に。場況 → 撮って計算 → 点数(抹茶ラテ色のカード+注文伝票の申告) → 翻・符。 */
@@ -46,9 +46,12 @@ button:disabled { cursor: default; }
 @media (prefers-reduced-motion: no-preference) { button, .filebtn { transition: transform .1s, background-color .18s, border-color .18s, color .18s; } }
 
 /* 見出し */
-.mast { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
-.mast h1 { font-weight: 900; font-size: 22px; letter-spacing: .08em; margin: 0; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-.mast h1::before { content: ""; width: 14px; height: 18px; border-radius: 4px; background: var(--tile); border: 1.5px solid var(--tile-line); border-bottom: 4px solid var(--pop); flex: none; }
+.mast { display: flex; flex-direction: column; gap: 4px; padding: 0 4px; }
+.mast h1 { margin: 0; display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+.mast .kick { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-family: var(--font-body); font-weight: 900; font-size: 13px; letter-spacing: .24em; color: var(--accent); }
+.mast .kick b { display: flex; align-items: center; gap: 8px; font-weight: 900; }
+.mast .ttl { font-family: "Dela Gothic One", var(--font-body); font-size: clamp(18px, 6.2vw, 30px); line-height: 1.2; letter-spacing: 0; color: var(--ink); white-space: nowrap; }
+.mast .kick b::before { content: ""; width: 14px; height: 18px; border-radius: 4px; background: var(--tile); border: 1.5px solid var(--tile-line); border-bottom: 4px solid var(--pop); flex: none; }
 .mast p { margin: 0; font-family: var(--font-num); font-weight: 400; font-size: 11px; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
 
 /* カード */
@@ -181,7 +184,7 @@ button:disabled { cursor: default; }
 </head>
 <body>
 <main>
-  <header class="mast"><h1>麻雀点数早見</h1><p>snap, score, call.</p></header>
+  <header class="mast"><h1><span class="kick"><b>忍び暗刻作</b><p>snap, score, call.</p></span><span class="ttl">点数早見シーーーート！！！</span></h1></header>
 
   <section class="card" aria-label="場況">
     <div class="row2">

@@ -8,7 +8,7 @@
 - 直したら必ず `npm test`。点数や役のロジックを変えたら `tests/cases.json` に手を追加する。
 - 公開は `main` への push だけ(ビルド工程なし)。
 - `GEMINI_API_KEY` と `PASSPHRASE` の値はリポジトリに書かない(GAS のスクリプトプロパティにだけある)。`app.js` の `API_URL`(GAS の公開URL)は公開されて問題ない。
-- `archive/claude-artifact.html` は旧版の参考。更新しない。
+- `archive/` の `claude-artifact.html` と `quick.html`(旧 `mahjong-score-quick`)は旧版の参考。更新しない。
 
 ## app.js の地図(上から順)
 - `HAN` / `FUS` / `st`: 翻・符の選択肢と画面の状態(localStorage `mj-state` に保存)

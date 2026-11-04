@@ -13,6 +13,7 @@
  */
 
 function doPost(e) {
+  var t0 = Date.now();
   try {
     var props = PropertiesService.getScriptProperties();
     var req = JSON.parse(e.postData.contents);
@@ -46,7 +47,8 @@ function doPost(e) {
 
     var json = parseJson_(body.text);
     if (!json) return out_({ error: 'invalid_json' });
-    return out_({ result: json });
+    // かかった時間(ミリ秒)。ページの「かかった時間」の表示に使う
+    return out_({ result: json, t: { gas: Date.now() - t0, ai: body.ms, model: body.model, tries: body.tries } });
   } catch (err) {
     return out_({ error: 'server_error', message: String(err) });
   }
@@ -88,8 +90,9 @@ function callWithFallback_(first, parts, key) {
   var list = [first].concat(FALLBACK_MODELS.filter(function (x) { return x !== first; }));
   var last = null;
   for (var i = 0; i < list.length; i++) {
+    var t = Date.now();
     var r = callGemini_(list[i], parts, key);
-    if (!r.error) { r.model = list[i]; return r; }
+    if (!r.error) { r.model = list[i]; r.tries = i + 1; r.ms = Date.now() - t; return r; }
     last = r;
     var msg = String(r.message || '');
     if (r.error !== 'rate_limited' && !/demand|overload|unavailable|no longer|not found|deprecated|HTTP 50/i.test(msg)) return r;

@@ -412,16 +412,19 @@
       limits: async function () { return { images: { maxCount: 2, mediaTypes: imgTypes } }; },
       json: async function (prompt, opts) {
         opts = opts || {};
+        samp.last = null;
+        var t0 = performance.now();
         var list = !opts.images ? [] : opts.images instanceof Blob ? [opts.images] : Array.prototype.slice.call(opts.images);
         var parts = [];
         for (var q = 0; q < list.length && q < 2; q++) parts.push({ mimeType: list[q].type || 'image/jpeg', data: await b64(list[q]) });
-        var res;
+        var t1 = performance.now(), res;
         try {
           res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({ pass: pass(), prompt: prompt, images: parts, hq: opts.modelTier === 'complex' }) });
         } catch (e) { throw { code: 'network' }; }
         var j = await res.json().catch(function () { return null; });
         if (!j) throw { code: 'network' };
+        samp.last = { b64: t1 - t0, send: performance.now() - t1, srv: j.t || null };
         if (j.error) { if (j.error === 'bad_pass') askPass(); throw { code: j.error, message: j.message }; }
         return j.result;
       }
@@ -434,17 +437,34 @@
     };
   }
   setShot();
+  // 読み取りにかかった時間の内訳を表示(直近10回の平均も。端末に保存)
+  function showTime(id, prep) {
+    var l = samp && samp.last; if (!l) return;
+    var s = function (ms) { return (Math.max(0, ms) / 1000).toFixed(1) + '秒'; };
+    var p = prep + l.b64, all = p + l.send, v = l.srv, parts = ['写真の準備 ' + s(p)];
+    if (v && v.gas) parts.push('通信・GAS起動 ' + s(l.send - v.gas), 'GAS ' + s(v.gas - (v.ai || 0)), 'AI ' + s(v.ai || 0) + (v.model ? '(' + v.model + (v.tries > 1 ? '・' + v.tries + '回目で成功' : '') + ')' : ''));
+    else parts.push('送受信と読み取り ' + s(l.send));
+    var log = [];
+    try { log = JSON.parse(localStorage.getItem('mj-times') || '[]'); } catch (e) {}
+    if (!Array.isArray(log)) log = [];
+    log = log.concat([Math.round(all)]).slice(-10);
+    try { localStorage.setItem('mj-times', JSON.stringify(log)); } catch (e) {}
+    var avg = log.reduce(function (a, b) { return a + b; }, 0) / log.length;
+    $(id).textContent = 'かかった時間 ' + s(all) + '(' + parts.join('・') + ')' + (log.length > 1 ? '。直近' + log.length + '回の平均 ' + s(avg) : '');
+    $(id).hidden = false;
+  }
   async function readShot() {
     var f = this.files && this.files[0];
     this.value = '';
     if (!f || !samp) return;
     try { $('thumb').src = URL.createObjectURL(f); $('thumb').hidden = false; } catch (e) {}
     var rm = $('readmsg');
-    rm.hidden = false; rm.textContent = '牌を読み取っています…';
+    rm.hidden = false; rm.textContent = '牌を読み取っています…'; $('rtime').hidden = true;
     try {
-      var imgs = await prep(f), pr = PROMPT + IMGNOTE(imgs.length);
+      var tp = performance.now(), imgs = await prep(f), pms = performance.now() - tp, pr = PROMPT + IMGNOTE(imgs.length);
       try { $('thumb').src = URL.createObjectURL(imgs[0]); } catch (e) {}
       var r = await samp.json(pr, { images: imgs, modelTier: 'default' });
+      showTime('rtime', pms);
       var put = function (x) { $('hand').value = String(x.hand || ''); $('melds').value = Array.isArray(x.melds) ? x.melds.join(' ') : ''; ph.win = -1; renderFu(); };
       put(r);
       rm.textContent = '読み取り結果です。違う牌があれば直してください。' + (r.note ? ' ' + r.note : '');
@@ -576,17 +596,18 @@
     var btn = $('qgo'), txt = $('qtext').value.trim();
     if (!samp) return;
     if (!qfile && !txt) { $('qmsg').textContent = '写真を撮るか、メモを入れてください。'; return; }
-    btn.disabled = true; $('qyaku').innerHTML = ''; $('qmsg').textContent = '読み取っています…';
+    btn.disabled = true; $('qyaku').innerHTML = ''; $('qmsg').textContent = '読み取っています…'; $('qtime').hidden = true;
     try {
       $('qhq').disabled = true;
-      var opts = { modelTier: hq ? 'complex' : 'default' };
+      var opts = { modelTier: hq ? 'complex' : 'default' }, pms = 0;
       if (qfile && imgOK) {
-        if (qprepFor !== qfile) { $('qmsg').textContent = '写真を準備しています…'; qprep = await prep(qfile); qprepFor = qfile; try { $('qthumb').src = URL.createObjectURL(qprep[0]); } catch (e) {} }
+        if (qprepFor !== qfile) { $('qmsg').textContent = '写真を準備しています…'; var tp = performance.now(); qprep = await prep(qfile); pms = performance.now() - tp; qprepFor = qfile; try { $('qthumb').src = URL.createObjectURL(qprep[0]); } catch (e) {} }
         opts.images = qprep;
         $('qmsg').textContent = hq ? '高精度で読み取っています…' : '読み取っています…';
       }
       var prompt = QPROMPT + '\n\nPlayer description: ' + (txt ? JSON.stringify(txt) : '(none)') + (opts.images ? '\nA photo of the hand is attached.' : '\nNo photo is attached.') + '\nCurrent settings on the screen (use these when the description does not say otherwise, and return them in dealer/tsumo): dealer=' + st.dealer + ', tsumo=' + st.tsumo + ', honba=' + (st.honba || 0) + ', roundWind=' + ph.rw + ', seatWind=' + ph.sw + ' (0=東 1=南 2=西 3=北; use these winds for 場風/自風 yakuhai).' + (opts.images ? IMGNOTE(opts.images.length) : '');
       var r = await samp.json(prompt, opts);
+      showTime('qtime', pms);
       applyQuick(r || {});
       if (opts.images && !hq && r && r.hand && !ph.res) $('qmsg').textContent += ' 読み取りが合わないときは「高精度で読み直す」を押してください。';
     } catch (e) {

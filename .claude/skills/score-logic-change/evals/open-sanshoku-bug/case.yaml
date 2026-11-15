@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: open-sanshoku-bug
+expected_outcome: |
+  鳴いた三色同順が2翻になっているバグを1翻に直し、鳴いた手と門前の手のテストを足して npm test を通す。

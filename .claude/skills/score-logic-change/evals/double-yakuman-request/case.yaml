@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: double-yakuman-request
+expected_outcome: |
+  採用ルール(役満の複合は13翻で頭打ち)を変える依頼なので、実装せずにユーザーに確認する。

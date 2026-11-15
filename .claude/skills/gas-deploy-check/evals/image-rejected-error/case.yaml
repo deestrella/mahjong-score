@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: image-rejected-error
+expected_outcome: |
+  Code.gs が拒否を見分けて、ページ側の ERR にすでにある image_rejected を返す。文法チェックをし、デプロイ待ちであることと新バージョンでのデプロイ手順を伝える。

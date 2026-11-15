@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: is-gas-down
+expected_outcome: |
+  公開 URL に GET を試し、403 がこのセッションのネットワークの制限だと見分けて、GAS が止まっているとは言わない。ユーザーにブラウザで URL を開いてもらうよう頼み、ERR の文言から考えられる原因(gemini_error / server_error)を挙げる。写真付き POST は送らない。

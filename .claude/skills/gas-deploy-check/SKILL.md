@@ -35,12 +35,21 @@ GAS のデプロイには、持ち主の Google アカウントでのログイ�
 
 ## 3. 変えたあとに自分で確かめる
 
-GAS 自体はここでは動かせないので、できる範囲で確かめます。
+GAS 自体はここでは動かせませんが、偽物の上でなら動かせます。次の 2 つを実行します。
 
 ```bash
 cp gas/Code.gs "${TMPDIR:-/tmp}/Code.js" && node --check "${TMPDIR:-/tmp}/Code.js"
 ```
 
+```bash
+node .claude/skills/gas-deploy-check/scripts/try-gas.mjs
+```
+
+1 つ目は文法の確認です。文法の誤りがあると、デプロイしても GAS が動きません。
+
+2 つ目の `try-gas.mjs` は、`UrlFetchApp`・`PropertiesService` などの偽物を用意して `doGet` / `doPost` を実際に動かします。偽の Gemini の返答を使うので、本物の Gemini には送りません。API キーも回数制限も使いません。今の約束事(ふつうの読み取り・合言葉違い・回数の上限・429・混雑時の切り替え・キー無し)の確認が入っています。
+
+**変えた部分の確認は、`checks` に 1 行足してから実行します。** たとえば新しいエラーを返すようにしたなら、そのエラーになる偽の返答を `replies` に入れ、期待するエラーが返るかを確かめます。足した確認も残しておくと、次に GAS を直すときにまとめて確かめられます。
 
 - `assets/app.js` も変えたなら `npm test` を通します(写真の読み取りはテストされませんが、ページが壊れていないかは分かります)。
 - 変更を読み直し、`UrlFetchApp`・`PropertiesService`・`LockService` など GAS にしかない仕組みの使い方が正しいかを確かめます。`LockService` で取ったロックは `finally` で必ず放します。
@@ -68,12 +77,12 @@ curl -sSL -m 20 "$(grep -o "https://script.google.com/macros/s/[^']*" assets/app
 
 - `{"ok":true,...}` が返れば GAS は動いています。問題はページ側か Gemini 側です。
 - `CONNECT tunnel failed, response 403` は、このセッションのネットワーク設定で script.google.com に出られないという意味です。GAS が止まっているわけではありません。ユーザーに URL をブラウザで開いてもらい、表示を教えてもらってください。
-- 呼び出しの回数制限を減らしてしまうので、写真付きの POST は送りません。
+- 公開 URL に POST は送りません。写真が無くても、合言葉が未設定なら回数を 1 回使い、Gemini も呼んでしまいます。GAS の処理を確かめたいときは `try-gas.mjs` を使います。
 
 ## 6. 報告する
 
 - 何を変えたか。ページ側も変えたかどうか。
-- `node --check`(と `npm test`)の結果
+- `node --check`・`try-gas.mjs`(と `npm test`)の結果。足した確認があればその名前も
 - **デプロイ待ちであること**と、4 の手順
 - ページ側も変えた場合は、どちらを先に公開しても動くか。動かない場合は、どちらを先にすべきか。
 
